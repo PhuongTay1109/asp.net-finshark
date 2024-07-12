@@ -5,6 +5,16 @@ document.getElementById('uploadForm').addEventListener('submit', async (event) =
     const imageFile = document.getElementById('image').files[0];
     const name = document.getElementById('name').value;
 
+    if (!imageFile) {
+        alert("Please select an image.");
+        return;
+    }
+
+    if (!name) {
+        alert("Please enter a name for the image.");
+        return;
+    }
+
     formData.append('image', imageFile);
 
     try {
@@ -17,10 +27,17 @@ document.getElementById('uploadForm').addEventListener('submit', async (event) =
             throw new Error('Network response was not ok' + response.statusText);
         }
 
-        const result = await response.json();
-        alert("Image uploaded successfully");
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const result = await response.json();
+            alert(`Image uploaded successfully: ID = ${result.Id}, Name = ${result.Name}`);
+        } else {
+            alert('Unexpected response format');
+        }
+
+        // Reset the form fields
         document.getElementById('uploadForm').reset();
     } catch (error) {
-        alert("Upload failed");
+        alert(`Upload failed: ${error.message}`);
     }
 });

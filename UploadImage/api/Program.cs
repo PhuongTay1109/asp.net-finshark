@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using MinimalImageUploadAPI.Data;
 using MinimalImageUploadAPI.Services;
@@ -5,11 +6,14 @@ using MinimalImageUploadAPI.Services;
 var  AllowSpecificOrigins = "_AllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<JsonOptions>(opts => opts.SerializerOptions.IncludeFields = true);
+
+
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
 
-builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddSingleton<IImageService, ImageService>(); 
 
 builder.Services.AddCors(options =>
 {
@@ -26,33 +30,23 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Migrate the database during startup. 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
-
 app.UseHttpsRedirection();
 app.UseCors(AllowSpecificOrigins);
 
-app.MapPost("/upload", async (IImageService imageService, IFormFile image, string name) =>
+app.MapPost("/upload", async Task<IResult> (IImageService imageService, IFormFile image, string name) =>
 {
     try
     {
         var newImage = await imageService.UploadImageAsync(image, name);
-        return Results.Ok();
+        // return Results.Ok(new { uploadedImage.Id, uploadedImage.Name });
+        return Results.Ok(new { Message = "Success uploaded" });
     }
     catch (ArgumentException ex)
     {
-        return Results.BadRequest(ex.Message);
+        return Results.BadRequest(new { Message = ex.Message });
     }
 }).DisableAntiforgery();
+
+
 
 app.Run();

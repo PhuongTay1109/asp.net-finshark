@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using MinimalImageUploadAPI.Data;
 using MinimalImageUploadAPI.Models;
 
 namespace MinimalImageUploadAPI.Services
 {
+
     public class ImageService : IImageService
     {
         private readonly AppDbContext _context;
@@ -37,4 +34,5 @@ namespace MinimalImageUploadAPI.Services
             return newImage;
         }
     }
+
 }
